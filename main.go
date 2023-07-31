@@ -29,6 +29,8 @@ func main() {
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
 
+	userService.SaveAvatar("d051d98d-339b-47ea-8580-05e64abd590f", "images/1.jpg")
+
 	userHandler := handler.NewUserHandler(userService)
 
 	router := gin.Default()
@@ -37,6 +39,7 @@ func main() {
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/sessions", userHandler.Login)
 	api.POST("/email_checkers", userHandler.CheckEmailAvailability)
+	api.POST("/avatars", userHandler.UploadAvatar)
 
 	router.Run(":9000")
 }
