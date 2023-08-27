@@ -10,6 +10,7 @@ import (
 type Service interface {
 	RegisterUser(input RegisterUserInput) (User, error)
 	Login(input LoginInput) (User, error)
+	GetUserByID(ID string) (User, error)
 	IsEmailAvailable(input CheckEmailInput) (bool, error)
 	SaveAvatar(ID string, fileLocation string) (User, error)
 }
@@ -59,6 +60,19 @@ func (s *service) Login(input LoginInput) (User, error) {
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
 		return user, errors.New("Your password is wrong")
+	}
+
+	return user, nil
+}
+
+func (s *service) GetUserByID(ID string) (User, error) {
+	user, err := s.repository.FindByID(ID)
+	if err != nil {
+		return user, err
+	}
+
+	if user.ID == "" {
+		return user, errors.New("No user found on that ID")
 	}
 
 	return user, nil
