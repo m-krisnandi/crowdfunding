@@ -8,6 +8,7 @@ import (
 	"crowdfunding/user"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
+	"log"
 	"net/http"
 	"strings"
 
@@ -29,7 +30,7 @@ func main() {
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	userRepository := user.NewRepository(db)
@@ -56,6 +57,7 @@ func main() {
 	api.GET("/campaigns", campaignHandler.GetCampaigns)
 	api.GET("/campaigns/:id", campaignHandler.GetCampaign)
 	api.POST("/campaigns", authMiddleware(authService, userService), campaignHandler.CreateCampaign)
+	api.PUT("/campaigns/:id", authMiddleware(authService, userService), campaignHandler.UpdateCampaign)
 
 	router.Run(":9000")
 }
