@@ -9,6 +9,7 @@ type repository struct {
 type Repository interface {
 	GetByCampaignID(campaignID string) ([]Transaction, error)
 	GetByUserID(userID string) ([]Transaction, error)
+	GetByOrderID(orderID string) (Transaction, error)
 	Save(transaction Transaction) (Transaction, error)
 	Update(transaction Transaction) (Transaction, error)
 }
@@ -37,6 +38,17 @@ func (r *repository) GetByUserID(userID string) ([]Transaction, error) {
 	}
 
 	return transactions, nil
+}
+
+func (r *repository) GetByOrderID(orderID string) (Transaction, error) {
+	var transaction Transaction
+
+	err := r.db.Where("code = ?", orderID).Find(&transaction).Error
+	if err != nil {
+		return transaction, err
+	}
+
+	return transaction, nil
 }
 
 func (r *repository) Save(transaction Transaction) (Transaction, error) {

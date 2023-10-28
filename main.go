@@ -9,9 +9,13 @@ import (
 	"crowdfunding/transaction"
 	"crowdfunding/user"
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/joho/godotenv"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -22,13 +26,21 @@ import (
 func main() {
 	var db *gorm.DB
 	var err error
-	host := "localhost"
-	username := "postgres"
-	password := "secret"
-	dbName := "crowdfunding"
-	port := 5432
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Asia/Jakarta", host, username, password, dbName, port)
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	host := os.Getenv("POSTGRE_HOST")
+	username := os.Getenv("POSTGRE_USER")
+	password := os.Getenv("POSTGRE_PASSWORD")
+	dbName := os.Getenv("POSTGRE_DBNAME")
+	portPostgre, _ := strconv.Atoi(os.Getenv("POSTGRE_PORT"))
+	port := uint16(portPostgre)
+	SSLMode := os.Getenv("POSTGRE_SSLMODE")
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=Asia/Jakarta", host, username, password, dbName, port, SSLMode)
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
@@ -50,6 +62,7 @@ func main() {
 	transactionHandler := handler.NewTransactionHandler(transactionService)
 
 	router := gin.Default()
+	router.Use(cors.Default())
 	router.Static("/images", "./images")
 	api := router.Group("/api/v1")
 
@@ -70,6 +83,7 @@ func main() {
 	api.GET("/campaigns/:id/transactions", authMiddleware(authService, userService), transactionHandler.GetCampaignTransactions)
 	api.GET("/transactions", authMiddleware(authService, userService), transactionHandler.GetUserTransactions)
 	api.POST("/transactions", authMiddleware(authService, userService), transactionHandler.CreateTransaction)
+	api.POST("/transactions/notification", transactionHandler.GetNotification)
 
 	router.Run(":9000")
 }
